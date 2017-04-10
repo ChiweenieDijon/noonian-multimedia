@@ -1,0 +1,15 @@
+{
+	"__ver": "sys-pkg:10",
+	"_id": "v74ttPBfQUa1jh8tk78Uhg",
+	"doc": "Uses HTML5 audio capability (AudioContext) to playback audio.  Caches audio locally if retainCache is true\n\n@return constructor for an AudioPlayer object",
+	"module": {
+		"_disp": "noonian.api",
+		"_id": "NJnfAVnFSmuMcv9voRnaJQ"
+	},
+	"name": "AudioPlayer",
+	"parameters": [
+		"$q"
+	],
+	"path": "sys/multimedia",
+	"type": "service"
+}

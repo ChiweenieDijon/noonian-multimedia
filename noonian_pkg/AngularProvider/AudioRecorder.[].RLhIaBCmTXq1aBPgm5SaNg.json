@@ -1,0 +1,15 @@
+{
+	"__ver": "sys-pkg:10",
+	"_id": "RLhIaBCmTXq1aBPgm5SaNg",
+	"doc": "Uses HTML5 audio capability (getUserMedia) to record audio from user's microphone.\n@return constructor for an AudioRecorder object",
+	"module": {
+		"_disp": "noonian.api",
+		"_id": "NJnfAVnFSmuMcv9voRnaJQ"
+	},
+	"name": "AudioRecorder",
+	"parameters": [
+		"$q"
+	],
+	"path": "sys/multimedia",
+	"type": "service"
+}
