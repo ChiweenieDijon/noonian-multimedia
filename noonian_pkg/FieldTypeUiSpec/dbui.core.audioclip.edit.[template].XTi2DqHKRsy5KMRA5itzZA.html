@@ -1,0 +1,10 @@
+<div class="form-inline">
+    <input type="text" class="form-control" id="{{elemId}}_name" value="{{binding.value.filename}}" />
+    <input type="file" id="{{elemId}}_file" class="file_input ng-hide" accept="audio/*" />
+    <button class="form-control" ng-disabled="uploading" ng-hide="binding.value" ng-click="initiateUpload()"><i ng-hide="uploading" class="fa fa-upload"></i><i ng-show="uploading" class="fa fa-spinner fa-pulse"></i></button>
+    <button class="form-control" ng-hide="recording" ng-click="startRecording()"><i class="fa fa-circle" style="color:red"></i></button>
+    <button class="form-control" ng-show="recording" ng-click="stopRecording()"><i class="fa fa-stop"></i></button>
+    <button class="form-control" ng-disabled="playing || recording || !binding.value" ng-click="play()"><i class="fa fa-play"></i></button>
+    <button class="form-control" ng-show="binding.value" ng-click="clear()"><i class="fa fa-close"></i></button>
+    
+</div>

@@ -1,0 +1,8 @@
+{
+	"__ver": "sys-pkg:2",
+	"_id": "9tXhsSgiQqe75RlPNV9cGA",
+	"doc": "An audio file.  Like an attachment, the actual content of the file is stored in mongoDB's special collections \"fs.files\" and \"fs.chunks\", with the field value referencing the fs.files record",
+	"mongo_type": "Mixed",
+	"name": "audioclip",
+	"text_index": false
+}

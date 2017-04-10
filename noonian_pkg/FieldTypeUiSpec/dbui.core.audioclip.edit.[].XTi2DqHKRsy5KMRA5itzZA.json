@@ -1,0 +1,16 @@
+{
+	"__ver": "sys-pkg:24",
+	"_id": "XTi2DqHKRsy5KMRA5itzZA",
+	"fieldtypes": [
+		{
+			"_disp": "audioclip",
+			"_id": "9tXhsSgiQqe75RlPNV9cGA",
+			"name": "audioclip"
+		}
+	],
+	"for_editing": true,
+	"for_editing_array": false,
+	"for_viewing": false,
+	"for_viewing_array": false,
+	"key": "dbui.core.audioclip.edit"
+}

@@ -1,0 +1,5 @@
+<div class="form-inline">
+    <a target="_blank" ng-href="attachment_ws/download/{{displayValue.attachment_id}}"><i class="fa fa-download"></i> {{ displayValue.filename }}</a>
+    <button class="form-control" ng-hide="playing" ng-click="play()"><i class="fa fa-play"></i></button>
+    <button class="form-control" ng-show="playing" ng-click="stop()"><i class="fa fa-stop"></i></button>
+</div>
