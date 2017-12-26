@@ -1,0 +1,7 @@
+{
+	"__ver": "sys-pkg:1",
+	"_id": "qZHPxkpUS0OKbMUKu6es6Q",
+	"doc": "Utility to convert between Data URI and js buffer.  Adapted from:\nhttps://github.com/TooTallNate/node-data-uri-to-buffer",
+	"name": "DataUriUtil",
+	"path": "util"
+}

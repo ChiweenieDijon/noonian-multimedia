@@ -1,0 +1,7 @@
+{
+	"__ver": "sys-pkg:2",
+	"_id": "8f71UchbQSaqE5HtuOtieA",
+	"doc": "Utility module to wrap childProcess calls to espeak text-to-speech.",
+	"name": "EspeakUtil",
+	"path": "util"
+}
