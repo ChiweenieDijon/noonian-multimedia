@@ -1,5 +1,5 @@
 {
-	"__ver": "sys-pkg:4",
+	"__ver": "sys-pkg:5",
 	"_id": "3dilvdmsRWaFysji7IxMsA",
 	"enable_building": false,
 	"key": "sys.multimedia",
@@ -10,7 +10,7 @@
 			"v74ttPBfQUa1jh8tk78Uhg": "sys-pkg:10"
 		},
 		"CodeModule": {
-			"8f71UchbQSaqE5HtuOtieA": "sys-pkg:1",
+			"8f71UchbQSaqE5HtuOtieA": "sys-pkg:2",
 			"qZHPxkpUS0OKbMUKu6es6Q": "sys-pkg:1"
 		},
 		"FieldType": {
@@ -21,7 +21,11 @@
 			"bVpXwVrcSZKSgXGGEwBo9Q": "sys-pkg:3"
 		}
 	},
-	"minor_version": 1,
+	"minor_version": 2,
 	"name": "Multimedia Tools",
-	"package_file": null
+	"package_file": {
+		"attachment_id": "lB5-xDpWRNqDVahMkq7i8g",
+		"filename": "sys.multimedia.0.2.json",
+		"type": "application/json"
+	}
 }

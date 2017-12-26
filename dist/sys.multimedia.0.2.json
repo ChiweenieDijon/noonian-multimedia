@@ -5,23 +5,13 @@
 	"key": "sys.multimedia",
 	"major_version": 0,
 	"manifest": {
-		"AngularApp": {
-			"Qf4T4Q_WTgmAhJGrsjHrFg": "sys-pkg:4"
-		},
 		"AngularProvider": {
 			"RLhIaBCmTXq1aBPgm5SaNg": "sys-pkg:11",
 			"v74ttPBfQUa1jh8tk78Uhg": "sys-pkg:10"
 		},
-		"BusinessObjectDef": {
-			"IVNeprDJTJezVTH2PnbmQA": "sys:1|sys-pkg:1"
-		},
 		"CodeModule": {
-			"8f71UchbQSaqE5HtuOtieA": "sys-pkg:1",
+			"8f71UchbQSaqE5HtuOtieA": "sys-pkg:2",
 			"qZHPxkpUS0OKbMUKu6es6Q": "sys-pkg:1"
-		},
-		"Config": {
-			"-H2Rcmo1Sriv9cRoQiYxGQ": "sys:2|sys-pkg:2",
-			"yjoQfy6JT9OfNzPFSEHqEQ": "sys:3|sys-pkg:1"
 		},
 		"FieldType": {
 			"9tXhsSgiQqe75RlPNV9cGA": "sys-pkg:2"
@@ -31,54 +21,10 @@
 			"bVpXwVrcSZKSgXGGEwBo9Q": "sys-pkg:3"
 		}
 	},
-	"minor_version": 1,
+	"minor_version": 2,
 	"name": "Multimedia Tools"
 },
 "business_objects":[
-{
-	"__ver": "sys:1|sys-pkg:1",
-	"_class": "BusinessObjectDef",
-	"_id": "IVNeprDJTJezVTH2PnbmQA",
-	"abstract": false,
-	"class_name": "Person",
-	"definition": {
-		"audioclip": {
-			"type": "audioclip"
-		},
-		"phone": {
-			"type": "phone"
-		},
-		"user": {
-			"ref_class": "User",
-			"type": "reference"
-		}
-	},
-	"doc": "For testing two-factor authentication",
-	"system": false
-},
-{
-	"__t": "AngularApp",
-	"__ver": "sys-pkg:4",
-	"_class": "AngularApp",
-	"_id": "Qf4T4Q_WTgmAhJGrsjHrFg",
-	"body": "<div class=\"container\" ng-controller=\"TestCtrl\">\n    <dbui-field-editor fieldtype=\"audioclip\" type-desc=\"typeDesc\" elem-id=\"audioclip\" ng-model=\"audioClipData\" context-object=\"contextObject\"></dbui-field-editor>\n    <hr>\n    <dbui-field-viewer type-desc=\"typeDesc\" elem-id=\"audioclipviewr\" display-value=\"audioClipData\" context-object=\"theObject\" ></dbui-field-viewer>\n</div>",
-	"config_function": "function ($controllerProvider, $locationProvider, $compileProvider) {\n    \n    //Need this to download wav file generated from blob\n    $compileProvider.aHrefSanitizationWhitelist(/^\\s*(|blob|):/);\n    \n    \n    $controllerProvider.register('TestCtrl', function(db, $scope, $timeout, $http, AudioPlayer) {\n        $scope.typeDesc = {\"type\":\"audioclip\"};\n        $scope.contextObject = {};\n        $scope.$watch('audioClipData', function(val) {\n            console.log('audioClipData', val);\n        }, true);\n        \n    });\n    \n}",
-	"css_dependencies": [
-	],
-	"head": "<title>Multimedia Test</title>",
-	"js_dependencies": [
-	],
-	"module": {
-		"_disp": "noonian.dbui",
-		"_id": "myP57XGhSNyDKrrcJFvO0Q",
-		"name": "noonian.dbui",
-		"path": "noonian/dbui"
-	},
-	"name": "mm-test.html",
-	"path": "test",
-	"rolespec": [
-	]
-},
 {
 	"__ver": "sys-pkg:11",
 	"_class": "AngularProvider",
@@ -115,10 +61,10 @@
 	"type": "service"
 },
 {
-	"__ver": "sys-pkg:1",
+	"__ver": "sys-pkg:2",
 	"_class": "CodeModule",
 	"_id": "8f71UchbQSaqE5HtuOtieA",
-	"code": "function (nodeRequire, Q) {\n    \n    var spawn = nodeRequire('child_process').spawn;\n    var fs = nodeRequire('fs');\n        \n    var exports = {};\n    \n    exports.speakToFile = function(toSay) {\n        var wavFilename = 'autogen_tts_'+Date.now()+'.wav';\n        var wavPath = '/tmp/'+wavFilename;\n        \n        var deferred = Q.defer();\n        \n        var espeak = spawn('espeak', ['-ven-us+f2', '-s120', '-w'+wavPath, '--stdin']);\n        espeak.stdin.end(toSay);\n        \n        espeak.on('close', function(code) {\n            console.log('espeak exit code %s', code);\n            fs.stat(wavPath, function(err, stats) {\n                if(err) {\n                    deferred.resolve(true); //let's not fail the record save...\n                    \n                    return console.error('FAILED TO GENERATE TTS - couldnt open wav file -  %j', err);\n                }\n                \n                var metaObj = {\n                  filename:wavFilename,\n                  size:stats.size,\n                  type:'audio/wav'\n                };\n                    \n                var fromFile = fs.createReadStream(wavPath);\n                GridFsService.saveFile(fromFile, metaObj).then(function(fileId) {\n                    metaObj.attachment_id = fileId;\n                    THIS.audio_cue = metaObj;\n                    deferred.resolve(true);\n                },\n                function(err) {\n                    console.error('FAILED TO GENERATE TTS - failure saving attachment - %j', err);\n                    deferred.resolve(true);\n                })\n                \n            });\n            \n        });\n        \n        return deferred.promise;\n    }\n    \n    return exports;\n}",
+	"code": "function (db, nodeRequire, Q) {\n    \n    var GridFsService = db._svc.GridFsService;\n    var spawn = nodeRequire('child_process').spawn;\n    var fs = nodeRequire('fs');\n        \n    var exports = {};\n    \n    exports.speakToFile = function(toSay) {\n        var wavFilename = 'tts_'+Date.now()+'.wav';\n        var wavPath = '/tmp/'+wavFilename;\n        \n        var deferred = Q.defer();\n        \n        var espeak = spawn('espeak', ['-ven-us+f2', '-s120', '-w'+wavPath, '--stdin']);\n        espeak.stdin.end(toSay);\n        \n        espeak.on('close', function(code) {\n            console.log('espeak exit code %s', code);\n            fs.stat(wavPath, function(err, stats) {\n                if(err) {\n                    deferred.reject(err); \n                    \n                    return console.error('FAILED TO GENERATE TTS - couldnt open wav file -  %j', err);\n                }\n                \n                var metaObj = {\n                  filename:wavFilename,\n                  size:stats.size,\n                  type:'audio/wav'\n                };\n                    \n                var fromFile = fs.createReadStream(wavPath);\n                GridFsService.saveFile(fromFile, metaObj).then(function(fileId) {\n                    metaObj.attachment_id = fileId;\n                    deferred.resolve(metaObj);\n                },\n                function(err) {\n                    console.error('FAILED TO GENERATE TTS - failure saving attachment - %j', err);\n                    deferred.reject(err);\n                })\n                \n            });\n            \n        });\n        \n        return deferred.promise;\n    }\n    \n    return exports;\n}",
 	"doc": "Utility module to wrap childProcess calls to espeak text-to-speech.",
 	"name": "EspeakUtil",
 	"path": "util"
@@ -131,50 +77,6 @@
 	"doc": "Utility to convert between Data URI and js buffer.  Adapted from:\nhttps://github.com/TooTallNate/node-data-uri-to-buffer",
 	"name": "DataUriUtil",
 	"path": "util"
-},
-{
-	"__ver": "sys:2|sys-pkg:2",
-	"_class": "Config",
-	"_id": "-H2Rcmo1Sriv9cRoQiYxGQ",
-	"allow_customize": false,
-	"key": "sys.dbui.perspective.default.Person",
-	"rolespec": [
-	],
-	"system": false,
-	"value": {
-		"edit": {
-			"layout": [
-				"phone",
-				"user",
-				"audioclip"
-			]
-		},
-		"list": {
-			"fields": [
-				"phone",
-				"user",
-				"audioclip"
-			]
-		},
-		"view": {
-			"layout": [
-				"audioclip",
-				"phone",
-				"user"
-			]
-		}
-	}
-},
-{
-	"__ver": "sys:3|sys-pkg:1",
-	"_class": "Config",
-	"_id": "yjoQfy6JT9OfNzPFSEHqEQ",
-	"allow_customize": false,
-	"key": "sys.instanceName",
-	"rolespec": [
-	],
-	"system": false,
-	"value": "Multimedia Package"
 },
 {
 	"__ver": "sys-pkg:2",
