@@ -111,6 +111,33 @@ function ($q) {
         return audioBlob;
     };
     
+    AudioRecorder.prototype.toFileAttachment = function (filename) {
+        var audioBlob = this.exportWav();
+        
+        var metaObj = {
+          filename:filename,
+          size:audioBlob.size,
+          type:audioBlob.type
+        };
+
+        var fd = new FormData();
+        fd.append('metadata', JSON.stringify(metaObj));
+        fd.append('file', audioBlob);
+
+        var httpConfig = {
+          transformRequest: angular.identity,
+          headers: {'Content-Type': undefined}
+        };
+
+        return $http.post('attachment_ws/upload', fd, httpConfig)
+        .then(function(resp) {
+          return resp.data.result;
+        },
+        function(err) {
+          console.log(err);
+        });  
+    };
+    
     
     // thanks to Matt Diamond (https://webaudiodemos.appspot.com/AudioRecorder)
     var writeString = function(view, offset, string) {
