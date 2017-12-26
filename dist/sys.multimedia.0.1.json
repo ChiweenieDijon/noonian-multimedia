@@ -1,0 +1,227 @@
+{
+"metadata":{
+	"_id": "3dilvdmsRWaFysji7IxMsA",
+	"enable_building": false,
+	"key": "sys.multimedia",
+	"major_version": 0,
+	"manifest": {
+		"AngularApp": {
+			"Qf4T4Q_WTgmAhJGrsjHrFg": "sys-pkg:4"
+		},
+		"AngularProvider": {
+			"RLhIaBCmTXq1aBPgm5SaNg": "sys-pkg:11",
+			"v74ttPBfQUa1jh8tk78Uhg": "sys-pkg:10"
+		},
+		"BusinessObjectDef": {
+			"IVNeprDJTJezVTH2PnbmQA": "sys:1|sys-pkg:1"
+		},
+		"CodeModule": {
+			"8f71UchbQSaqE5HtuOtieA": "sys-pkg:1",
+			"qZHPxkpUS0OKbMUKu6es6Q": "sys-pkg:1"
+		},
+		"Config": {
+			"-H2Rcmo1Sriv9cRoQiYxGQ": "sys:2|sys-pkg:2",
+			"yjoQfy6JT9OfNzPFSEHqEQ": "sys:3|sys-pkg:1"
+		},
+		"FieldType": {
+			"9tXhsSgiQqe75RlPNV9cGA": "sys-pkg:2"
+		},
+		"FieldTypeUiSpec": {
+			"XTi2DqHKRsy5KMRA5itzZA": "sys-pkg:24",
+			"bVpXwVrcSZKSgXGGEwBo9Q": "sys-pkg:3"
+		}
+	},
+	"minor_version": 1,
+	"name": "Multimedia Tools"
+},
+"business_objects":[
+{
+	"__ver": "sys:1|sys-pkg:1",
+	"_class": "BusinessObjectDef",
+	"_id": "IVNeprDJTJezVTH2PnbmQA",
+	"abstract": false,
+	"class_name": "Person",
+	"definition": {
+		"audioclip": {
+			"type": "audioclip"
+		},
+		"phone": {
+			"type": "phone"
+		},
+		"user": {
+			"ref_class": "User",
+			"type": "reference"
+		}
+	},
+	"doc": "For testing two-factor authentication",
+	"system": false
+},
+{
+	"__t": "AngularApp",
+	"__ver": "sys-pkg:4",
+	"_class": "AngularApp",
+	"_id": "Qf4T4Q_WTgmAhJGrsjHrFg",
+	"body": "<div class=\"container\" ng-controller=\"TestCtrl\">\n    <dbui-field-editor fieldtype=\"audioclip\" type-desc=\"typeDesc\" elem-id=\"audioclip\" ng-model=\"audioClipData\" context-object=\"contextObject\"></dbui-field-editor>\n    <hr>\n    <dbui-field-viewer type-desc=\"typeDesc\" elem-id=\"audioclipviewr\" display-value=\"audioClipData\" context-object=\"theObject\" ></dbui-field-viewer>\n</div>",
+	"config_function": "function ($controllerProvider, $locationProvider, $compileProvider) {\n    \n    //Need this to download wav file generated from blob\n    $compileProvider.aHrefSanitizationWhitelist(/^\\s*(|blob|):/);\n    \n    \n    $controllerProvider.register('TestCtrl', function(db, $scope, $timeout, $http, AudioPlayer) {\n        $scope.typeDesc = {\"type\":\"audioclip\"};\n        $scope.contextObject = {};\n        $scope.$watch('audioClipData', function(val) {\n            console.log('audioClipData', val);\n        }, true);\n        \n    });\n    \n}",
+	"css_dependencies": [
+	],
+	"head": "<title>Multimedia Test</title>",
+	"js_dependencies": [
+	],
+	"module": {
+		"_disp": "noonian.dbui",
+		"_id": "myP57XGhSNyDKrrcJFvO0Q",
+		"name": "noonian.dbui",
+		"path": "noonian/dbui"
+	},
+	"name": "mm-test.html",
+	"path": "test",
+	"rolespec": [
+	]
+},
+{
+	"__ver": "sys-pkg:11",
+	"_class": "AngularProvider",
+	"_id": "RLhIaBCmTXq1aBPgm5SaNg",
+	"doc": "Uses HTML5 audio capability (getUserMedia) to record audio from user's microphone.\n@return constructor for an AudioRecorder object",
+	"function": "function ($q) {\n    \n    navigator.getUserMedia  = navigator.getUserMedia ||\n        navigator.webkitGetUserMedia ||\n        navigator.mozGetUserMedia ||\n        navigator.msGetUserMedia;\n          \n    //Constructor\n    var AudioRecorder = function() {\n        if(!navigator || !navigator.getUserMedia) {\n            throw new Error('missing navigator.getUserMedia');\n        }\n        \n        var THIS = this;\n        var processorBufferSize = 1024; //valid values: 256, 512, 1024, 2048, 4096, 8192, 16384\n        \n        var audioContext = this.audioContext = new AudioContext();\n        var recorderNode = this.recorderNode = audioContext.createScriptProcessor(processorBufferSize, 1, 1);\n        this.recBuffer = [];\n        \n        recorderNode.onaudioprocess = function(audioProcessingEvent) {\n            \n            var inputBuffer = audioProcessingEvent.inputBuffer;\n            \n            var inputData = inputBuffer.getChannelData(0);\n            \n            console.log('processing', inputBuffer.length);\n            \n            // Loop through the samples in input bffer; push into recorder buffer\n            for (var sample = 0; sample < inputBuffer.length; sample++) {\n                THIS.recBuffer.push(inputData[sample]);\n            }\n            \n        };\n    };\n    \n    /**\n     * Start recording from navigator.getUserMedia\n     * @return promise fulfilled when recording begins\n     */\n    AudioRecorder.prototype.record = function() {\n        var deferred = $q.defer();\n        var THIS = this;\n        \n        navigator.getUserMedia({audio: true}, \n            function(stream) {\n                // Create an AudioNode from the stream.\n                THIS.audioSource = THIS.audioContext.createMediaStreamSource(stream);\n                \n                //connect it to our recorderNode\n                THIS.audioSource.connect(THIS.recorderNode);\n                THIS.recorderNode.connect(THIS.audioContext.destination); //needed to work in chromium\n                \n                deferred.resolve(THIS.audioSource);\n            },\n            \n            function(err) {\n                console.error('AudioRecorder.record', err);\n                deferred.reject(err);\n            }\n        );\n        \n        return deferred.promise;\n    };\n    \n    AudioRecorder.prototype.stop = function() {\n        //disconnect audioSource (connected to user's mic via getUserMedia) from our recorderNode\n        this.audioSource.disconnect(this.recorderNode);\n        this.recorderNode.disconnect(this.audioContext.destination);\n    };\n    \n    AudioRecorder.prototype.play = function() {\n        \n        var audioContext = this.audioContext;\n        var recBuffer = this.recBuffer;\n        \n        var sampleCount = recBuffer.length;\n        \n        \n        //Create an AudioBuffer to wrap our raw data buffer\n        var aBuffer = audioContext.createBuffer(1, sampleCount, audioContext.sampleRate);\n        \n        // feed recBuffer data into bufferNode\n        var channelData = aBuffer.getChannelData(0);\n        for (var i = 0; i < sampleCount; i++) {\n            channelData[i] = recBuffer[i];\n        }\n        \n        \n        //Create a source node that draws from the AudioBuffer\n        var recordedSource = audioContext.createBufferSource(); \n        recordedSource.buffer = aBuffer;                    // tell the source which sound to play\n        recordedSource.connect(audioContext.destination);       // connect the source to the context's destination (the speakers)\n        recordedSource.start(0); \n        \n        var deferred = $q.defer();\n        recordedSource.onended  = function() {\n            deferred.resolve(recordedSource);\n        };\n        return deferred.promise;\n    };\n    \n    \n    AudioRecorder.prototype.clearBuffer = function() {\n        this.recBuffer = [];\n    };\n    \n    AudioRecorder.prototype.exportWav = function() {\n        var dataview = AudioRecorder.encodeWAV(this.recBuffer, true, this.audioContext.sampleRate);\n        var audioBlob = new Blob([dataview], { type: 'audio/wav' });\n        return audioBlob;\n    };\n    \n    AudioRecorder.prototype.toFileAttachment = function (filename) {\n        var audioBlob = this.exportWav();\n        \n        var metaObj = {\n          filename:filename,\n          size:audioBlob.size,\n          type:audioBlob.type\n        };\n\n        var fd = new FormData();\n        fd.append('metadata', JSON.stringify(metaObj));\n        fd.append('file', audioBlob);\n\n        var httpConfig = {\n          transformRequest: angular.identity,\n          headers: {'Content-Type': undefined}\n        };\n\n        return $http.post('attachment_ws/upload', fd, httpConfig)\n        .then(function(resp) {\n          return resp.data.result;\n        },\n        function(err) {\n          console.log(err);\n        });  \n    };\n    \n    \n    // thanks to Matt Diamond (https://webaudiodemos.appspot.com/AudioRecorder)\n    var writeString = function(view, offset, string) {\n        for (var i = 0; i < string.length; i++){\n            view.setUint8(offset + i, string.charCodeAt(i));\n        }\n    };\n    \n    var floatTo16BitPCM = function(output, offset, input) {\n        for (var i = 0; i < input.length; i++, offset+=2){\n            var s = Math.max(-1, Math.min(1, input[i]));\n            output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);\n        }\n    };\n    \n    AudioRecorder.encodeWAV = function(samples, mono, sampleRate) {\n        var buffer = new ArrayBuffer(44 + samples.length * 2);\n        \n        var view = new DataView(buffer);\n        \n        writeString(view, 0, 'RIFF');                       // RIFF identifier \n        view.setUint32(4, 32 + samples.length * 2, true);   // file length\n        writeString(view, 8, 'WAVE');                       // RIFF type\n        writeString(view, 12, 'fmt ');                      //format chunk identifier\n        view.setUint32(16, 16, true);                       //format chunk length\n        view.setUint16(20, 1, true);                        //sample format (raw)\n        view.setUint16(22, mono?1:2, true);                 //channel count\n        view.setUint32(24, sampleRate, true);               //sample rate\n        view.setUint32(28, sampleRate * 4, true);           //byte rate (sample rate * block align)\n        view.setUint16(32, 4, true);                        //block align (channel count * bytes per sample)\n        view.setUint16(34, 16, true);                       //bits per sample\n        writeString(view, 36, 'data');                      // data chunk identifier\n        view.setUint32(40, samples.length * 2, true);       // data chunk length\n        \n        \n        floatTo16BitPCM(view, 44, samples);\n\n        return view;\n    };\n    \n    \n    return AudioRecorder;\n}",
+	"module": {
+		"_disp": "noonian.api",
+		"_id": "NJnfAVnFSmuMcv9voRnaJQ"
+	},
+	"name": "AudioRecorder",
+	"parameters": [
+		"$q",
+		"$http"
+	],
+	"path": "sys/multimedia",
+	"type": "service"
+},
+{
+	"__ver": "sys-pkg:10",
+	"_class": "AngularProvider",
+	"_id": "v74ttPBfQUa1jh8tk78Uhg",
+	"doc": "Uses HTML5 audio capability (AudioContext) to playback audio.  Caches audio locally if retainCache is true\n\n@return constructor for an AudioPlayer object",
+	"function": "function ($q) {\n    \n\n    \n    \n    var AudioPlayer = function(retainCache) {\n        if(retainCache) {\n            this.bufferCache = true;\n        }\n        \n        this.audioContext = new AudioContext();\n    };\n    \n    \n    AudioPlayer.prototype.playBuffer = function(buffer) {\n        \n        var source = this.currSrc = this.audioContext.createBufferSource();\n        source.buffer = buffer;\n        source.connect(this.audioContext.destination);\n        source.start(0);                           \n        \n        // note: on older systems, may have to use deprecated noteOn(time);\n        \n        var deferred = $q.defer();\n        source.onended  = function() {\n            deferred.resolve(source);\n        };\n        return deferred.promise;\n    };\n    \n    \n    AudioPlayer.prototype.playUrl = function(link) {\n        var THIS = this;\n        var cache = this.bufferCache;\n        \n        if(cache && cache[link]) {\n            console.log(link+' is buffered');\n            return this.playBuffer(cache[link]);\n        }\n        \n        var request = new XMLHttpRequest();\n        request.open('GET', link, true);\n        request.responseType = 'arraybuffer';\n        \n        var deferred = $q.defer();\n        // Decode asynchronously\n        request.onload = function() {\n            console.log('response for '+link, request.response.byteLength);\n            \n            THIS.audioContext.decodeAudioData(request.response, function(buffer) {\n                \n                if(cache) {\n                    cache[link] = buffer;\n                }\n                deferred.resolve(THIS.playBuffer(buffer));\n            }, function(err) {\n                console.error(err);\n                deferred.reject(err);\n            });\n        }\n        request.send();\n        return deferred.promise;\n    };\n    \n    AudioPlayer.prototype.stopPlayback = function() {\n        this.currSrc.disconnect(this.audioContext.destination);\n    };\n    \n    \n    return AudioPlayer;\n}",
+	"module": {
+		"_disp": "noonian.api",
+		"_id": "NJnfAVnFSmuMcv9voRnaJQ"
+	},
+	"name": "AudioPlayer",
+	"parameters": [
+		"$q"
+	],
+	"path": "sys/multimedia",
+	"type": "service"
+},
+{
+	"__ver": "sys-pkg:1",
+	"_class": "CodeModule",
+	"_id": "8f71UchbQSaqE5HtuOtieA",
+	"code": "function (nodeRequire, Q) {\n    \n    var spawn = nodeRequire('child_process').spawn;\n    var fs = nodeRequire('fs');\n        \n    var exports = {};\n    \n    exports.speakToFile = function(toSay) {\n        var wavFilename = 'autogen_tts_'+Date.now()+'.wav';\n        var wavPath = '/tmp/'+wavFilename;\n        \n        var deferred = Q.defer();\n        \n        var espeak = spawn('espeak', ['-ven-us+f2', '-s120', '-w'+wavPath, '--stdin']);\n        espeak.stdin.end(toSay);\n        \n        espeak.on('close', function(code) {\n            console.log('espeak exit code %s', code);\n            fs.stat(wavPath, function(err, stats) {\n                if(err) {\n                    deferred.resolve(true); //let's not fail the record save...\n                    \n                    return console.error('FAILED TO GENERATE TTS - couldnt open wav file -  %j', err);\n                }\n                \n                var metaObj = {\n                  filename:wavFilename,\n                  size:stats.size,\n                  type:'audio/wav'\n                };\n                    \n                var fromFile = fs.createReadStream(wavPath);\n                GridFsService.saveFile(fromFile, metaObj).then(function(fileId) {\n                    metaObj.attachment_id = fileId;\n                    THIS.audio_cue = metaObj;\n                    deferred.resolve(true);\n                },\n                function(err) {\n                    console.error('FAILED TO GENERATE TTS - failure saving attachment - %j', err);\n                    deferred.resolve(true);\n                })\n                \n            });\n            \n        });\n        \n        return deferred.promise;\n    }\n    \n    return exports;\n}",
+	"doc": "Utility module to wrap childProcess calls to espeak text-to-speech.",
+	"name": "EspeakUtil",
+	"path": "util"
+},
+{
+	"__ver": "sys-pkg:1",
+	"_class": "CodeModule",
+	"_id": "qZHPxkpUS0OKbMUKu6es6Q",
+	"code": "function () {\n    return {\n        /**\n         * Returns a `Buffer` instance from the given data URI `uri`.\n         *\n         * @param {String} uri Data URI to turn into a Buffer instance\n         * @return {Buffer} Buffer instance from Data URI\n         * @api public\n         */\n        uriToBuffer:function(uri) {\n            if (!/^data\\:/i.test(uri)) {\n                throw new TypeError('`uri` does not appear to be a Data URI (must begin with \"data:\")');\n              }\n            \n              // strip newlines\n              uri = uri.replace(/\\r?\\n/g, '');\n            \n              // split the URI up into the \"metadata\" and the \"data\" portions\n              var firstComma = uri.indexOf(',');\n              if (-1 === firstComma || firstComma <= 4) throw new TypeError('malformed data: URI');\n            \n              // remove the \"data:\" scheme and parse the metadata\n              var meta = uri.substring(5, firstComma).split(';');\n            \n              var base64 = false;\n              var charset = 'US-ASCII';\n              for (var i = 0; i < meta.length; i++) {\n                if ('base64' == meta[i]) {\n                  base64 = true;\n                } else if (0 == meta[i].indexOf('charset=')) {\n                  charset = meta[i].substring(8);\n                }\n              }\n            \n              // get the encoded data portion and decode URI-encoded chars\n              var data = unescape(uri.substring(firstComma + 1));\n            \n              var encoding = base64 ? 'base64' : 'ascii';\n              var buffer = new Buffer(data, encoding);\n            \n              // set `.type` property to MIME type\n              buffer.type = meta[0] || 'text/plain';\n            \n              // set the `.charset` property\n              buffer.charset = charset;\n            \n              return buffer;\n        },\n        \n        bufferToUri:function(buffer, options) {\n            var ct = options.contentType || 'text/plain';\n            var prefix = 'data:'+ct+';base64,';\n            return prefix+buffer.toString('base64');\n        }\n    }\n}",
+	"doc": "Utility to convert between Data URI and js buffer.  Adapted from:\nhttps://github.com/TooTallNate/node-data-uri-to-buffer",
+	"name": "DataUriUtil",
+	"path": "util"
+},
+{
+	"__ver": "sys:2|sys-pkg:2",
+	"_class": "Config",
+	"_id": "-H2Rcmo1Sriv9cRoQiYxGQ",
+	"allow_customize": false,
+	"key": "sys.dbui.perspective.default.Person",
+	"rolespec": [
+	],
+	"system": false,
+	"value": {
+		"edit": {
+			"layout": [
+				"phone",
+				"user",
+				"audioclip"
+			]
+		},
+		"list": {
+			"fields": [
+				"phone",
+				"user",
+				"audioclip"
+			]
+		},
+		"view": {
+			"layout": [
+				"audioclip",
+				"phone",
+				"user"
+			]
+		}
+	}
+},
+{
+	"__ver": "sys:3|sys-pkg:1",
+	"_class": "Config",
+	"_id": "yjoQfy6JT9OfNzPFSEHqEQ",
+	"allow_customize": false,
+	"key": "sys.instanceName",
+	"rolespec": [
+	],
+	"system": false,
+	"value": "Multimedia Package"
+},
+{
+	"__ver": "sys-pkg:2",
+	"_class": "FieldType",
+	"_id": "9tXhsSgiQqe75RlPNV9cGA",
+	"doc": "An audio file.  Like an attachment, the actual content of the file is stored in mongoDB's special collections \"fs.files\" and \"fs.chunks\", with the field value referencing the fs.files record",
+	"mongo_type": "Mixed",
+	"name": "audioclip",
+	"text_index": false
+},
+{
+	"__ver": "sys-pkg:24",
+	"_class": "FieldTypeUiSpec",
+	"_id": "XTi2DqHKRsy5KMRA5itzZA",
+	"controller_fn": "function ($scope, AudioRecorder, AudioPlayer, $http) {\n    \n    var recorder;\n    var player; //lazy init\n    \n    var inBuffer = false;\n    \n    $scope.$watch('binding.value', function(b) {\n        console.log('audioclip editor: binding', b);\n    });\n \n    \n    $scope.startRecording = function() {\n        recorder = recorder || new AudioRecorder();\n        \n        recorder.clearBuffer();\n        recorder.record().then(function() {\n            $scope.recording=true;\n        });\n    };\n    \n    $scope.stopRecording = function() {\n        recorder.stop();\n        $scope.recording=false;\n        inBuffer = true;\n        \n        var audioBlob = recorder.exportWav();\n        $scope.uploadFile(audioBlob, 'recordedsample.wav');\n        \n    };\n    \n    $scope.play = function() {\n        $scope.playing = true;\n        var finishPlayPromise;\n        if(inBuffer) {\n            finishPlayPromise = recorder.play();\n        }\n        else {\n            player = player || new AudioPlayer(false); //non-caching\n            var attId = $scope.binding.value.attachment_id;\n            finishPlayPromise = player.playUrl('attachment_ws/download/'+attId);\n        }\n        finishPlayPromise.then(function() {\n            $scope.playing = false;\n        });\n    };\n\n\n    $scope.clear = function() {\n      $scope.binding.value = null;\n    }\n    \n    $scope.uploadFile = function(fileObj, fileName) {\n        var metaObj = {\n          filename:fileName,\n          size:fileObj.size,\n          type:fileObj.type\n        };\n\n        var fd = new FormData();\n        fd.append('metadata', JSON.stringify(metaObj));\n        fd.append('file', fileObj);\n\n        var httpConfig = {\n          transformRequest: angular.identity,\n          headers: {'Content-Type': undefined}\n        };\n\n        $scope.uploading = true;\n        $http.post('attachment_ws/upload', fd, httpConfig)\n        .then(function(result) {\n        //   console.log('upload complete',result)\n          $scope.uploading = false;\n          $scope.binding.value = result.data.result;\n        },\n        function(err) {\n          console.log(err);\n        });\n    };\n\n\n  }",
+	"fieldtypes": [
+		{
+			"_disp": "audioclip",
+			"_id": "9tXhsSgiQqe75RlPNV9cGA",
+			"name": "audioclip"
+		}
+	],
+	"for_editing": true,
+	"for_editing_array": false,
+	"for_viewing": false,
+	"for_viewing_array": false,
+	"key": "dbui.core.audioclip.edit",
+	"link_fn": "function (scope, iElement, iAttributes) {\n    \n    console.log('audioclip editor', scope, iElement, iAttributes);\n    \n    var fileInputElem = iElement.find('input.file_input');\n    \n    \n    scope.initiateUpload = function() {\n        // console.log(fileInputElem);\n        fileInputElem.click();\n    };\n    \n    \n    fileInputElem.bind('change', function() {\n        scope.$apply(function() {\n            //A file has been selected\n            var file = fileInputElem[0].files[0];\n            scope.uploadFile(file, file.name);\n        });\n    });\n    return true;\n}",
+	"template": "<div class=\"form-inline\">\n    <input type=\"text\" class=\"form-control\" id=\"{{elemId}}_name\" value=\"{{binding.value.filename}}\" />\n    <input type=\"file\" id=\"{{elemId}}_file\" class=\"file_input ng-hide\" accept=\"audio/*\" />\n    <button class=\"form-control\" ng-disabled=\"uploading\" ng-hide=\"binding.value\" ng-click=\"initiateUpload()\"><i ng-hide=\"uploading\" class=\"fa fa-upload\"></i><i ng-show=\"uploading\" class=\"fa fa-spinner fa-pulse\"></i></button>\n    <button class=\"form-control\" ng-hide=\"recording\" ng-click=\"startRecording()\"><i class=\"fa fa-circle\" style=\"color:red\"></i></button>\n    <button class=\"form-control\" ng-show=\"recording\" ng-click=\"stopRecording()\"><i class=\"fa fa-stop\"></i></button>\n    <button class=\"form-control\" ng-disabled=\"playing || recording || !binding.value\" ng-click=\"play()\"><i class=\"fa fa-play\"></i></button>\n    <button class=\"form-control\" ng-show=\"binding.value\" ng-click=\"clear()\"><i class=\"fa fa-close\"></i></button>\n    \n</div>"
+},
+{
+	"__ver": "sys-pkg:3",
+	"_class": "FieldTypeUiSpec",
+	"_id": "bVpXwVrcSZKSgXGGEwBo9Q",
+	"controller_fn": "function ($scope, AudioPlayer) {\n    \n    // var recorder = new AudioRecorder();\n    var player; \n    \n    $scope.play = function() {\n        player = player || new AudioPlayer(false); //non-caching\n        var attId = $scope.displayValue.attachment_id;\n        $scope.playing=true;\n        player.playUrl('attachment_ws/download/'+attId).then(function(src) {\n            $scope.playing = false;\n        });\n    };\n    \n    $scope.stop = function() {\n        player.stopPlayback();\n        $scope.playing = false;\n    };\n\n  }",
+	"fieldtypes": [
+		{
+			"_disp": "audioclip",
+			"_id": "9tXhsSgiQqe75RlPNV9cGA",
+			"name": "audioclip"
+		}
+	],
+	"for_editing": false,
+	"for_editing_array": false,
+	"for_viewing": true,
+	"for_viewing_array": false,
+	"key": "dbui.core.audioclip.view",
+	"link_fn": null,
+	"template": "<div class=\"form-inline\">\n    <a target=\"_blank\" ng-href=\"attachment_ws/download/{{displayValue.attachment_id}}\"><i class=\"fa fa-download\"></i> {{ displayValue.filename }}</a>\n    <button class=\"form-control\" ng-hide=\"playing\" ng-click=\"play()\"><i class=\"fa fa-play\"></i></button>\n    <button class=\"form-control\" ng-show=\"playing\" ng-click=\"stop()\"><i class=\"fa fa-stop\"></i></button>\n</div>"
+}]}

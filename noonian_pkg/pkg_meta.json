@@ -1,7 +1,27 @@
 {
-	"__ver": "sys-pkg:2",
+	"__ver": "sys-pkg:4",
 	"_id": "3dilvdmsRWaFysji7IxMsA",
 	"enable_building": false,
 	"key": "sys.multimedia",
-	"name": "Multimedia Tools"
+	"major_version": 0,
+	"manifest": {
+		"AngularProvider": {
+			"RLhIaBCmTXq1aBPgm5SaNg": "sys-pkg:11",
+			"v74ttPBfQUa1jh8tk78Uhg": "sys-pkg:10"
+		},
+		"CodeModule": {
+			"8f71UchbQSaqE5HtuOtieA": "sys-pkg:1",
+			"qZHPxkpUS0OKbMUKu6es6Q": "sys-pkg:1"
+		},
+		"FieldType": {
+			"9tXhsSgiQqe75RlPNV9cGA": "sys-pkg:2"
+		},
+		"FieldTypeUiSpec": {
+			"XTi2DqHKRsy5KMRA5itzZA": "sys-pkg:24",
+			"bVpXwVrcSZKSgXGGEwBo9Q": "sys-pkg:3"
+		}
+	},
+	"minor_version": 1,
+	"name": "Multimedia Tools",
+	"package_file": null
 }
